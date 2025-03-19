@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(255)
+  surname            String               @db.VarChar(255)
+  username           String               @unique @db.VarChar(255)
+  numero             String?              @db.VarChar(255)
+  password           String               @db.VarChar(255)
+  email              String               @unique @db.VarChar(255)
+  affiliation        String?              @db.VarChar(255)
+  is_validated       Boolean?             @default(false)
+  role               role_enum
+  chercheure         Boolean?             @default(false)
+  profile_picture    Bytes?
+  profile_mime       String?              @db.VarChar(50)
+  certificate        Bytes?
+  niv_expertise      String?              @db.VarChar(255)
+  Annotation         Annotation[]
+  Conflict           Conflict[]
+  Notification       Notification[]
+  Project            Project[]
+  RefreshToken       RefreshToken[]
+  Section            Section[]
+  SectionContributor SectionContributor[]
+  passwordResetTokens  PasswordResetToken[]
+}
+
+model Project {
+  id                     Int       @id @default(autoincrement())
+  title                  String?   @db.VarChar(255)
+  description            String?   @db.VarChar(255)
+  creator_id             Int?      
+  location               String?   @db.VarChar(255)
+  period                 String?   @db.VarChar(255)
+  created_at             DateTime? @default(now()) @db.Timestamp(6)
+  architectural_resource String?   @db.VarChar(255)
+  Picture                Picture[]
+  User                   User?     @relation(fields: [creator_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Section                Section[]
+  Tags        Tag[] 
+}
+model Tag {
+  id         Int     @id @default(autoincrement())
+  name       String  @unique @db.VarChar(255)
+  project_id Int?
+  section_id Int?
+
+  Project    Project? @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  Section    Section? @relation(fields: [section_id], references: [id], onDelete: Cascade)
+}
+
+model Section {
+  id                 Int                  @id @default(autoincrement())
+  project_id         Int
+  creator_id         Int
+  title              String               @db.VarChar(255)
+  content            String?
+  source             String?
+  discipline         discipline
+  Annotation         Annotation[]
+  Conflict           Conflict[]
+  Picture            Picture[]
+  User               User                 @relation(fields: [creator_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Project            Project              @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  SectionContributor SectionContributor[]
+  Tags       Tag[]   
+}
+
+model Picture {
+  id           Int      @id @default(autoincrement())
+  project_id   Int?
+  section_id   Int?
+  picture_data Bytes?
+  Project      Project? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Section      Section? @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model SectionContributor {
+  section_id Int
+  user_id    Int
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  Section    Section   @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([section_id, user_id])
+}
+
+model Annotation {
+  id         Int       @id @default(autoincrement())
+  section_id Int
+  user_id    Int
+  content    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  Section    Section   @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Notification {
+  id         Int       @id @default(autoincrement())
+  type       String?   @db.VarChar(255)
+  user_id    Int
+  message    String?
+  is_read    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Conflict {
+  id          Int               @id @default(autoincrement())
+  section_id  Int
+  reported_by Int
+  created_at  DateTime?         @default(now()) @db.Timestamp(6)
+  User        User              @relation(fields: [reported_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Section     Section           @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model RefreshToken {
+  id         Int       @id @default(autoincrement())
+  token      String    @db.VarChar(255) @unique
+  user_id    Int
+  expires_at DateTime  @db.Timestamp(6)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model PasswordResetToken {
+  id          Int      @id @default(autoincrement())
+  token_hash  String   @db.VarChar(255) @unique
+  user_id     Int
+  expires_at  DateTime @db.Timestamp(6)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  User        User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum discipline {
+  architecture
+  archeologue
+  historien
+  other
+}
+
+enum resolution_status {
+  pending
+  resolved
+  rejected
+}
+
+enum role_enum {
+  admin
+  architecte
+  archeologue
+  historien
+  user
+}
