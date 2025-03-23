@@ -98,6 +98,8 @@ const Login = () => {
             <p className="text-sm text-black font-medium whitespace-nowrap cursor-pointer underline underline-offset-2">
               Forgot Password?
             </p>
+               {/* Display error message if validation fails */}
+       
           </div>
 
           {/* Login Button */}
@@ -106,6 +108,10 @@ const Login = () => {
            <Button type={'submit'}  message="Login" Click={handleSubmit}/> 
           </div>
           </form>
+
+
+
+          
 
         </div>
         

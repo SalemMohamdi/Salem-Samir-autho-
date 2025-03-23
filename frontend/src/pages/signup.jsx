@@ -91,9 +91,12 @@ const colors = {
       // Read file as Base64
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => {
-        setFormData((prev) => ({ ...prev, certificate: reader.result }));
-      };
+      
+        reader.onload = () => {
+          const base64String = reader.result.split(",")[1]; // Remove "data:application/pdf;base64,"
+          setFormData((prev) => ({ ...prev, certificate: base64String }));
+        };
+     
     
       reader.onerror = () => {
         alert("Error reading file. Please try again.");
