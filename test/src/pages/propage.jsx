@@ -37,7 +37,7 @@ const Pro = () => {
               <div className="w-full flex flex-col">
                {/* <label className="block text-black text-sm font-medium">Expertise</label>*/}
                 <select className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none">
-                  <option>Select Expertise</option>
+                  <option>Select level of Expertise</option>
                   <option>Architecture</option>
                   <option>Archeologist</option>
                   <option>Historian</option>

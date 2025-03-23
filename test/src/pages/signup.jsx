@@ -36,57 +36,106 @@ const colors = {
       confirmPassword: "",
        is_validated: false,
        is_authenticated: false,
-
+        numero: "",
        role: "user", // Default role
     affiliation: "",
     certificate: "",
-    expertise: "",
+    niv_expertise: "",
     });
   
     const handleChange = (e) => {
       const { name, value } = e.target;
       setFormData((prev) => ({ ...prev, [name]: value }));
     };
+    const [error, setError] = useState("");
+
+    const handlePasswordChange = (e) => {
+      const password = e.target.value;
+      setFormData({ ...formData, password });
   
+      // Check if password has a capital letter
+      
+      if (!/[A-Z]/.test(password)) {
+        setError("Password must contain at least one uppercase letter.");
+      } 
+      // Check if password is at least 12 characters
+      else if (password.length < 12) {
+        setError("Password must be at least 12 characters long.");
+      } 
+      else {
+        setError(""); // Clear error when both conditions are met
+      }
+    };
    
    
     const handleFileUpload = (e) => {
       const file = e.target.files[0];
     
-      if (file) {
-        // Validate file type
-        if (file.type !== "application/pdf") {
-          alert("Only PDF files are allowed!");
-          e.target.value = ""; // Reset file input
-          return;
-        }
+      if (!file) return; // No file selected
     
-        // Read file as Base64
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          setFormData({ ...formData, certificate: reader.result });
-        };
+      // Check for PDF type
+      if (!file.type.includes("pdf")) {
+        alert("Only PDF files are allowed!");
+        e.target.value = ""; // Reset file input
+        return;
       }
+    
+      // Check file size (max 5MB)
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      if (file.size > MAX_SIZE) {
+        alert("File size must be under 5MB.");
+        e.target.value = "";
+        return;
+      }
+    
+      // Read file as Base64
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        setFormData((prev) => ({ ...prev, certificate: reader.result }));
+      };
+    
+      reader.onerror = () => {
+        alert("Error reading file. Please try again.");
+      };
     };
+    
 
 
 
+
+    
     const handleSubmit = async (e) => {
       e.preventDefault();
+    
       if (formData.password !== formData.confirmPassword) {
         alert("Passwords do not match!");
         return;
       }
-  
+    
       try {
-        await register (formData);
+        await register(formData);
         alert("Signup successful!");
-        navigate("/login"); // Redirect to login page
+        navigate("/"); // Redirect to login page
       } catch (error) {
-        alert("Signup failed! " + error.response?.data?.message || error.message);
+        if (error.response) {
+          // Handle specific error responses
+          const { status, data } = error.response;
+          
+          if (status === 400) {
+            alert(`Signup failed: ${data.error || "Invalid input. Please check your details."}`);
+          } else if (status === 409) {
+            alert(`Signup failed: ${data.message.error || "Email or username already exists."}`);
+          } else {
+            alert(`Signup failed: ${data.message || "An unexpected error occurred."}`);
+          }
+        } else {
+          // Handle network or unexpected errors
+          alert("Signup failed: Unable to connect to the server. Please try again.");
+        }
       }
     };
+    
 
 
 
@@ -112,7 +161,7 @@ const colors = {
         {/* <p className='text-6xl tex font-semibold mb-4'>Welcome</p>   */}
            </div>
            <form onSubmit={handleSubmit}>
-      <input type="text" />
+     
 
                {/* <Placeholder value={formData.name}  type='text' placeholder ='First Name' onchange='{handleChange}'></Placeholder>
                 <Placeholder value={formData.surname}  type='text' placeholder ='Last Name' onchange='{handleChange}'></Placeholder>
@@ -121,32 +170,45 @@ const colors = {
                 <Placeholder value={formData.password}  type='password' placeholder ='Password' onchange='{handleChange}'></Placeholder>
                 <Placeholder value={formData.confirmPassword}  type='password' placeholder ='Confirm Password' onchange='{handleChange}'></Placeholder>
 */}
- <div className="w-full flex flex-col">
-        <input
-          type='text'
-          name="name"
-          required
-          placeholder='First Name'
-          onChange={(e) => setFormData({...formData, name: e.target.value })}
-          value={formData.name}
-          className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
-        />
-        </div>
-      
-      
-      
+<div className=" flex flex-row  ">
+  {/* First Name */}
+  <div className="w-1/2 pr-15">
+    <input
+      type="text"
+      name="name"
+      required
+      placeholder="First Name"
+      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+      value={formData.name}
+      className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
+    />
+  </div>
+
+  {/* Last Name */}
+  <div className="w-1/2  ">
+    <input
+      type="text"
+      name="surname"
+      placeholder="Last Name"
+      onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+      value={formData.surname}
+      required
+      className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
+    />
+  </div>
+</div>
+
         <div className="w-full flex flex-col">
         <input
           type='text'
-          name="surname"
-          placeholder='Last Name'
-          onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
-          value={formData.surname}
+          name="username"
           required
+          placeholder='username'
+          onChange={(e) => setFormData({...formData, username: e.target.value })}
+          value={formData.username}
           className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
         />
         </div>
-
 
         <div className="w-full flex flex-col">
         <input
@@ -159,40 +221,51 @@ const colors = {
           className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
         />
         </div>
-
-
-        <div className="w-full flex flex-col">
         <input
-          type='password'
-          name="password"
-          placeholder='Password'
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          required
-          className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
-        />
-        </div>
+  type='text'
+  name="numero"
+  required
+  placeholder='Phone Number'
+  onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+  value={formData.numero}
+  className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
+/>
+
+
+<div className="w-full flex flex-col">
+  <input
+    type="password"
+    name="password"
+    placeholder="Password"
+    value={formData.password}
+    onChange={handlePasswordChange}
+    required
+    className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
+  />
+  {error && <p className="text-red-500 text-sm ">{error}</p>}
+</div>
 
 
 
 
 
-        <div className="w-full flex flex-col">
-        <input
-          type='password'
-          name="confirmPassword"
-          value={formData.confirmPassword}
-          placeholder='ConfirmPassword'
-          required
-          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-          
-          className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
-        />
-        </div>
+<div className="w-full flex flex-col">
+  <input
+    type="password"
+    name="confirmPassword"
+    placeholder="Confirm Password"
+    value={formData.confirmPassword}
+    onChange={(e) =>setFormData({ ...formData, confirmPassword: e.target.value })}
+    required
+    className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
+  />
+</div>
 
         <select name="role" value={formData.role} onChange={handleChange} className="w-full text-black  my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none">
             <option value="user">User</option>
-            <option value="expert">Expert</option>
+            <option value="architecte">Architecture</option>
+            <option value="archeologue">Archeologist</option>
+            <option value=' historien'>Historian</option>
           </select>
 
  
@@ -202,7 +275,7 @@ const colors = {
  
 
           {/* Show Expert-Specific Fields Only if "Expert" is Selected */}
-          {formData.role === "expert" && (
+          {formData.role !== "user" && (
             <>
               <div className="w-full flex flex-col">
         <input
@@ -216,24 +289,23 @@ const colors = {
           className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
         />
 
-<select name="expertise" value={formData.expertise} onChange={handleChange} className="w-full text-black  my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none">
-            <option value="architecture">Architecture</option>
-            <option value="archeologist">Archeologist</option>
-            <option value='historian'>Historian</option>
+<select name="niv_expertise" value={formData.niv_expertise} onChange={handleChange} className="w-full text-black  my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none">
+         <option >Select your level of expertise</option>
+         <option value="Early-Career">Early-Career </option>
+            <option value="Senior ">Senior </option>
+            <option value='Distinguished '>Distinguished</option>
           </select>
-
-<input
+          <input
           type='file'
           name="certificate"
           accept="application/pdf"
          
-          placeholder='Enter your Certificate'
+          
           required
           onChange={handleFileUpload}
-          
+          placeholder='Enter your Certificate'
           className="w-full text-black py-2 my-2 border-b bg-transparent border-amber-900 outline-none focus:outline-none"
         />
-
         </div>
      
             </>
@@ -262,14 +334,15 @@ const colors = {
     
   {/*<Link to={"/congratulation"}>  <Button type='Submit'  message='Sign up'></Button> </Link>*/}
   <div className="w-full flex flex-col">
-        <button type='submit' className="w-full bg-amber-950 text-white rounded-md py-4 text-center flex items-center justify-center my-4">
+        <button type='submit' className="w-full bg-amber-950 text-white rounded-md py-4 text-center flex items-center justify-center my-4" onSubmit={handleSubmit}>
           Sign up
         </button>
       </div>
+    
 </div>
 </form>
 <div className='w-full flex items-center justify-center'>
-            <p className='text-sm font-normal text-black'>already have an account <Link to={"/login"}> <span className='font-semibold underline underline-offset-2 cursor-pointer'>Sign in </span> </Link></p>
+            <p className='text-sm font-normal text-black'>already have an account <Link to={"/"}> <span className='font-semibold underline underline-offset-2 cursor-pointer'>Sign in </span> </Link></p>
            </div>
 
             </div>
@@ -277,5 +350,6 @@ const colors = {
             </div>
         </div>
     )
-}
+};
 export default Signup;
+ 
