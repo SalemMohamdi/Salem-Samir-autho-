@@ -245,11 +245,16 @@ export const login = async (req, res) => {
       const user = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() },
         select: { 
-          id: true, 
+          id: true,
+          name: true,
+          surname: true,
+          username: true,
           password: true, 
           role: true,
-          email : true , 
-          is_validated: true
+          email : true, 
+          is_validated: true,
+          profile_picture: true,
+          profile_mime: true
       }});
   
       if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -263,8 +268,19 @@ export const login = async (req, res) => {
       const refreshToken = await generateRefreshToken(user.id);
       setAuthCookies(res, accessToken, refreshToken);
   
+      // Convert binary data to base64 URLs if profile picture exists
+      const profileImage = user.profile_picture && user.profile_mime
+        ? `data:${user.profile_mime};base64,${Buffer.from(user.profile_picture).toString('base64')}`
+        : null;
+        
+      // Remove binary data from the response
+      const { profile_picture, profile_mime, ...userWithoutBinary } = user;
+  
       res.status(StatusCodes.OK).json({
-        user: sanitizeUser(user),
+        user: {
+          ...sanitizeUser(userWithoutBinary),
+          profile_image: profileImage
+        },
         accessToken
       });
     } catch (error) {

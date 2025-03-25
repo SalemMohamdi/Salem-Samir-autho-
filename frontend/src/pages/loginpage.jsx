@@ -41,7 +41,7 @@ const Login = () => {
 
   return (
 
-   <div className="w-screen h-screen flex items-start bg-[#EDE8DD]">
+   <div className=" h-screen min-w-screen flex items-start bg-[#EDE8DD]">
       {/* Left Side - Image Section */}
       <div className="relative w-1/2 h-full flex flex-col">
     

@@ -16,15 +16,10 @@ import {
 import { authenticateUser,validateResetToken } from '../middleware/auth.js';
 import corsMiddleware from '../middleware/cors.js';
 import { StatusCodes } from 'http-status-codes';
-import rateLimit from 'express-rate-limit';
+import { authLimiter } from '../middleware/security.js';
 
 const router = express.Router();
 router.use(corsMiddleware);
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
-  message: 'Too many attempts, please try again later'
-});
 
 router.post('/register',
   authLimiter,
@@ -61,12 +56,14 @@ router.get('/testauth',
 );
 router.post(
   '/password-reset/request',
+  authLimiter, // Adding rate limiting to password reset requests
   validatePasswordResetRequest,
   requestPasswordReset
 );
 
 router.post(
   '/password-reset/confirm',
+  authLimiter, // Adding rate limiting to password reset confirmations
   validatePasswordReset,
   validateResetToken,
   resetPassword

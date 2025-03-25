@@ -8,27 +8,34 @@ import userRouter from './src/routes/userRoutes.js';
 import { prisma } from './src/config/index.js';
 import { errorHandler, notFoundHandler } from './src/middleware/errorHandler.js';
 import { StatusCodes } from 'http-status-codes';
-import  cors  from 'cors'
+import cors from 'cors';
 
 const app = express();
-//const cors = require("cors");
  
 // =======================
 // Middleware Stack
 // =======================
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
-app.use(...securityMiddleware);
+
+// Apply CORS before security middleware to avoid conflicts
 app.use(cors({
-  origin: 'http://localhost:5173', // CRA default port
-  credentials: true
+  origin: process.env.CLIENT_URL || 'http://localhost:3001',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Apply security middleware
+app.use(...securityMiddleware);
+
 // =======================
 // Routes
 // =======================
 app.use('/auth', authRouter);
 app.use('/admin', adminRouter);
 app.use('/user', userRouter);
+
 // =======================
 // Health Check Endpoint
 // =======================

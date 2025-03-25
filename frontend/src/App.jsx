@@ -4,12 +4,12 @@ import {Logout} from './pages/logoutpage';
 import Login from '../src/pages/loginpage';
 import Signup from '../src/pages/signup';
 import Congratulation from './pages/congratulation';
-import Pro from './pages/propage';
+import Dashboard from './pages/propage';
 import NotificationBar from './pages/notification';
 import './App.css';
 import { AuthProvider } from './context/AuthContext';
 import AdminPanel from './pages/pannelAdmin';
-
+import PendingValidation  from './pages/pending';
 import ProtectedRoute from '../src/ui/Components/protected';
 import UnauthorizedRedirect from '../src/ui/Components/unauthrized';
 
@@ -30,10 +30,12 @@ import UnauthorizedRedirect from '../src/ui/Components/unauthrized';
           {/* Protected Routes (Only authenticated users can access) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/congratulation" element={<Congratulation />} />
-            <Route path="/propage" element={<Pro />} />
+            <Route path="/propage" element={<Dashboard/>} />
             <Route path="/notification" element={<NotificationBar />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/pendingvalidation" element={<PendingValidation />} />
+
           </Route>
 
           {/* Catch-all for undefined routes */}

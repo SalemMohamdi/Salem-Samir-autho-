@@ -41,6 +41,7 @@ const colors = {
     affiliation: "",
     certificate: "",
     niv_expertise: "",
+    
     });
   
     const handleChange = (e) => {
@@ -114,9 +115,11 @@ const colors = {
       }
     
       try {
-        await register(formData);
-        alert("Signup successful!");
-        navigate("/"); // Redirect to login page
+        const result = await register(formData);
+        if (result.user) {
+          alert("Signup successful!");
+          navigate("/"); // Redirect to homepage or login page
+        }
       } catch (error) {
         if (error.response) {
           // Handle specific error responses

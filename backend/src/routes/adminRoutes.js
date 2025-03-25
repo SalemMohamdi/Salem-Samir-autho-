@@ -1,9 +1,10 @@
 import express from 'express';
 import {
-  getPendingExperts,
-  validateExpert,
-  getExpertDetails,
-  revokeExpertStatus
+  getPendingUsers,
+  validateUser,
+  getUserDetails,
+  revokeValidationStatus,
+  createAdmin
 } from '../controllers/adminController.js';
 
 import { authenticateUser, authorizeRoles } from '../middleware/auth.js';
@@ -14,9 +15,10 @@ const router = express.Router();
 // Admin middleware stack
 router.use(authenticateUser, authorizeRoles('admin'));
 
-router.get('/experts/pending', getPendingExperts);
-router.get('/experts/:id', getExpertDetails);
-router.put('/experts/:id/validate', validateExpert);
-router.delete('/experts/:id/revoke', revokeExpertStatus);
+router.get('/users/pending', getPendingUsers);
+router.get('/users/:id', getUserDetails);
+router.put('/users/:id/validate', validateUser);
+router.delete('/users/:id/revoke', revokeValidationStatus);
+router.post('/create',createAdmin);
 
 export default router;

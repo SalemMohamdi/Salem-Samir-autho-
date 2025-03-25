@@ -63,11 +63,14 @@ const handleTokenRefresh = async (req, res, next, refreshToken) => {
     const newRefreshToken = await generateRefreshToken(storedToken.User.id);
     // Token rotation
 
-
-    // Update tokens in database
-    await prisma.$transaction([
-      prisma.refreshToken.delete({ where: { token: refreshToken } })
-    ]);
+    // Update tokens in database - use deleteMany instead of delete to avoid errors when token doesn't exist
+    try {
+      await prisma.$transaction([
+        prisma.refreshToken.delete({ where: { token: refreshToken } })
+      ]);
+    } catch (txError) {
+      console.warn('Error during token rotation transaction:', txError.message);
+    }
 
     // Set new tokens
     setAuthCookies(res, newAccessToken, newRefreshToken);
@@ -78,13 +81,24 @@ const handleTokenRefresh = async (req, res, next, refreshToken) => {
     // Continue with request
     return next();
   } catch (refreshError) {
-    // Cleanup invalid tokens comment i need to revise this step because deleting all tokens
-    if(refreshToken){await prisma.refreshToken.delete({ where: { token: refreshToken } });}
+    // Cleanup invalid tokens
+    if (refreshToken) {
+        try {
+            await prisma.refreshToken.delete({ where: { token: refreshToken } });
+        } catch (prismaError) {
+            if (prismaError.code === 'P2025') {
+                console.warn('Attempted to delete a non-existent refresh token.');
+            } else {
+                console.error('Unexpected error while deleting refresh token:', prismaError);
+            }
+        }
+    }
+    
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
-    
+
     return res.status(StatusCodes.UNAUTHORIZED).json({
-      error: 'Session expired. Please login again.'
+        error: 'Session expired. Please login again.'
     });
   }
 };

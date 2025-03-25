@@ -7,6 +7,11 @@ import { validationResult } from 'express-validator';
 import ms from 'ms'; 
 
 
+const EXPERT_ROLES = ['architecte', 'archeologue', 'historien'];
+const EXPERT_REQUIRED_FIELDS = ['affiliation', 'certificate', 'niv_expertise'];
+// Allowed roles include admin, user and the expert roles
+const ALLOWED_ROLES = ['admin', 'user', ...EXPERT_ROLES];
+
 const handleAuthError = (error, res) => {
     if (error instanceof prisma.PrismaClientKnownRequestError) {
       switch (error.code) {
@@ -339,8 +344,11 @@ export const getUser = async (req, res) => {
     ? `data:application/pdf;base64,${Buffer.from(user.certificate).toString('base64')}`
     : null;
 
+      // Remove the binary data fields from the response
+      const { profile_picture, profile_mime, ...userWithoutBinary } = user;
+
       res.status(StatusCodes.OK).json({
-        ...user,
+        ...userWithoutBinary,
         profile_image: profileImage,
         certificate // Include the PDF data URL
       });
